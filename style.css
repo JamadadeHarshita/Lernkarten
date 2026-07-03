@@ -1,4 +1,9 @@
-
+/* ===== Theme tokens =====
+   Two modes, swapped via [data-theme] on <html>, matching the reference:
+   near-black / near-white surfaces, a single warm accent dot, and
+   grammatical gender encoded as a tiny color tag rather than big blocks
+   of color — restraint is the point here.
+*/
 :root[data-theme="dark"] {
   --bg: #121212;
   --surface: #1c1c1c;
@@ -216,8 +221,31 @@ body {
   z-index: 2;
   perspective: 1600px;
   -webkit-perspective: 1600px;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
+.flashcard:active { cursor: grabbing; }
+
+.swipe-stamp {
+  position: absolute;
+  top: 24px;
+  z-index: 10;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 3px solid;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+.stamp-good  { right: 20px; color: var(--das); border-color: var(--das); transform: rotate(-12deg); }
+.stamp-again { left: 20px; color: #e0654a; border-color: #e0654a; transform: rotate(12deg); }
+.stamp-easy  { left: 50%; top: 20px; transform: translateX(-50%) rotate(0deg); color: var(--der); border-color: var(--der); }
+.stamp-hard  { left: 50%; bottom: 20px; top: auto; transform: translateX(-50%) rotate(0deg); color: #e0a24a; border-color: #e0a24a; }
 .flashcard-inner {
   position: relative;
   width: 100%;

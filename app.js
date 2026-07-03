@@ -241,8 +241,10 @@ function renderCard() {
   }
   empty.hidden = true;
   flashcard.style.display = '';
-  flashcard.classList.remove('is-flipped');
-  isFlipped = false;
+  flashcard.style.transform = '';
+  flashcard.style.opacity = '';
+  resetFlipInstant();
+  ['again', 'good', 'easy', 'hard'].forEach(n => setStamp(n, 0));
   rateRow.hidden = true;
 
   currentWord = sessionQueue[sessionIndex % sessionQueue.length];
@@ -288,16 +290,128 @@ function flipCard() {
     rateRow.hidden = true;
   }
 }
+
+function resetFlipInstant() {
+  const inner = document.getElementById('flashcard-inner');
+  const flashcard = document.getElementById('flashcard');
+  inner.style.transition = 'none';
+  flashcard.classList.remove('is-flipped');
+  isFlipped = false;
+  // force reflow so the "no transition" snap actually applies before we restore it
+  void inner.offsetHeight;
+  inner.style.transition = '';
+}
+
+/* ---------- swipe (Tinder-style rating) ---------- */
+const SWIPE_THRESHOLD = 110;
+const MAX_TILT = 16;
+let dragState = null;
+
 function bindFlip() {
-  document.getElementById('flashcard').addEventListener('click', flipCard);
+  const card = document.getElementById('flashcard');
+  card.addEventListener('pointerdown', onDragStart);
+  card.addEventListener('pointermove', onDragMove);
+  card.addEventListener('pointerup', onDragEnd);
+  card.addEventListener('pointercancel', onDragEnd);
+  document.querySelectorAll('.audio-btn').forEach(btn => {
+    btn.addEventListener('pointerdown', e => e.stopPropagation());
+  });
+}
+
+function onDragStart(e) {
+  if (!currentWord) return;
+  const card = document.getElementById('flashcard');
+  card.setPointerCapture(e.pointerId);
+  card.style.transition = 'none';
+  dragState = { startX: e.clientX, startY: e.clientY, dx: 0, dy: 0 };
+}
+
+function onDragMove(e) {
+  if (!dragState) return;
+  dragState.dx = e.clientX - dragState.startX;
+  dragState.dy = e.clientY - dragState.startY;
+  if (!isFlipped) return; // only show drag feedback once the answer is visible
+  const card = document.getElementById('flashcard');
+  const tilt = Math.max(-MAX_TILT, Math.min(MAX_TILT, dragState.dx / 14));
+  card.style.transform = `translate(${dragState.dx}px, ${dragState.dy}px) rotate(${tilt}deg)`;
+  const absX = Math.abs(dragState.dx), absY = Math.abs(dragState.dy);
+  const horizontal = absX > absY;
+  setStamp('good', horizontal && dragState.dx > 0 ? clamp01(dragState.dx / SWIPE_THRESHOLD) : 0);
+  setStamp('again', horizontal && dragState.dx < 0 ? clamp01(-dragState.dx / SWIPE_THRESHOLD) : 0);
+  setStamp('easy', !horizontal && dragState.dy < 0 ? clamp01(-dragState.dy / SWIPE_THRESHOLD) : 0);
+  setStamp('hard', !horizontal && dragState.dy > 0 ? clamp01(dragState.dy / SWIPE_THRESHOLD) : 0);
+}
+
+function onDragEnd(e) {
+  if (!dragState) return;
+  const { dx, dy } = dragState;
+  dragState = null;
+  const card = document.getElementById('flashcard');
+  card.style.transition = '';
+
+  const absX = Math.abs(dx), absY = Math.abs(dy);
+  const moved = Math.max(absX, absY);
+
+  if (!isFlipped) {
+    if (moved < 10) flipCard();
+    resetCardTransform();
+    return;
+  }
+  if (moved < 10) {
+    flipCard();
+    resetCardTransform();
+    return;
+  }
+
+  const horizontal = absX > absY;
+  if (horizontal && dx > SWIPE_THRESHOLD) { swipeOut('right'); return; }
+  if (horizontal && dx < -SWIPE_THRESHOLD) { swipeOut('left'); return; }
+  if (!horizontal && dy < -SWIPE_THRESHOLD) { swipeOut('up'); return; }
+  if (!horizontal && dy > SWIPE_THRESHOLD) { swipeOut('down'); return; }
+  resetCardTransform();
+}
+
+function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+function setStamp(name, val) {
+  const el = document.getElementById('stamp-' + name);
+  if (el) el.style.opacity = val;
+}
+function resetCardTransform() {
+  const card = document.getElementById('flashcard');
+  card.style.transform = '';
+  ['again', 'good', 'easy', 'hard'].forEach(n => setStamp(n, 0));
+}
+
+const SWIPE_QUALITY = { left: 0, down: 1, right: 2, up: 3 };
+const SWIPE_FLY = {
+  left: 'translate(-650px, 40px) rotate(-28deg)',
+  right: 'translate(650px, 40px) rotate(28deg)',
+  up: 'translate(0, -750px) rotate(0deg)',
+  down: 'translate(0, 750px) rotate(0deg)'
+};
+function swipeOut(direction) {
+  const card = document.getElementById('flashcard');
+  card.style.transition = 'transform 0.38s cubic-bezier(.2,.8,.2,1), opacity 0.38s ease';
+  card.style.transform = SWIPE_FLY[direction];
+  card.style.opacity = '0';
+  const quality = SWIPE_QUALITY[direction];
+  setTimeout(() => {
+    card.style.transition = 'none';
+    card.style.transform = '';
+    card.style.opacity = '';
+    rate(quality);
+    ['again', 'good', 'easy', 'hard'].forEach(n => setStamp(n, 0));
+  }, 320);
 }
 
 /* ---------- rating ---------- */
 function bindRateButtons() {
+  const dirByQuality = { 0: 'left', 1: 'down', 2: 'right', 3: 'up' };
   document.querySelectorAll('.rate-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      rate(parseInt(btn.dataset.q, 10));
+      const q = parseInt(btn.dataset.q, 10);
+      swipeOut(dirByQuality[q]);
     });
   });
 }
