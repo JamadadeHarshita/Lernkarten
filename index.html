@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Wortschatz — German Vocab</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== HOME / STUDY VIEW ===== -->
+  <section class="view" id="view-study">
+    <header class="topbar">
+      <button class="icon-btn" id="btn-theme" title="Toggle theme" aria-label="Toggle theme">
+        <svg id="icon-sun" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 4V2m0 20v-2M4 12H2m20 0h-2M5.6 5.6L4.2 4.2m15.6 15.6l-1.4-1.4M5.6 18.4l-1.4 1.4M18.4 5.6l1.4-1.4M12 17a5 5 0 100-10 5 5 0 000 10z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        <svg id="icon-moon" viewBox="0 0 24 24" width="18" height="18" hidden><path fill="currentColor" d="M20.4 14.7A8.5 8.5 0 019.3 3.6a8.5 8.5 0 1011.1 11.1z"/></svg>
+      </button>
+      <div class="progress-chip">
+        <span class="progress-dot"></span>
+        <span class="progress-num" id="stat-mastered">0</span>
+        <span class="progress-total">/<span id="stat-total">0</span></span>
+      </div>
+    </header>
+
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-bar-fill"></div>
+    </div>
+
+    <div class="topic-chips" id="topic-chips"></div>
+
+    <div class="carousel" id="carousel"></div>
+
+    <div class="card-stage">
+      <div class="deck-stack">
+        <div class="deck-shadow deck-shadow-2"></div>
+        <div class="deck-shadow deck-shadow-1"></div>
+        <div class="flashcard" id="flashcard">
+          <div class="flashcard-inner" id="flashcard-inner">
+
+            <div class="face face-front">
+              <div class="card-top">
+                <span class="badge" id="card-badge">NOUN</span>
+                <button class="audio-btn" id="btn-audio" title="Play pronunciation" aria-label="Play pronunciation">
+                  <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M5 9v6h4l5 5V4L9 9H5z"/><path fill="currentColor" d="M16.5 8.5a4.5 4.5 0 010 7" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <div class="word-zone" id="word-zone">
+                <div class="article-tag" id="card-article">der</div>
+                <div class="word-display" id="card-word">Wort</div>
+              </div>
+              <div class="tap-hint">tap card to reveal</div>
+            </div>
+
+            <div class="face face-back">
+              <div class="card-top">
+                <span class="badge" id="card-badge-back">NOUN</span>
+                <button class="audio-btn" id="btn-audio-back" title="Play pronunciation" aria-label="Play pronunciation">
+                  <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M5 9v6h4l5 5V4L9 9H5z"/><path fill="currentColor" d="M16.5 8.5a4.5 4.5 0 010 7" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <div class="reveal-zone">
+                <div class="translation-display" id="card-translation">word</div>
+                <div class="plural-display" id="card-plural"></div>
+                <div class="example-block" id="example-block" hidden>
+                  <div class="example-de" id="card-example-de"></div>
+                  <div class="example-en" id="card-example-en"></div>
+                </div>
+              </div>
+              <div class="tap-hint">tap to flip back</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" id="empty-state" hidden>
+        <p>All caught up — nothing due right now.</p>
+        <button class="btn-primary" id="btn-add-from-empty">Add a word</button>
+      </div>
+    </div>
+
+
+    <div class="rate-row" id="rate-row" hidden>
+      <button class="rate-btn rate-again" data-q="0"><span class="rate-label">Again</span><span class="rate-sub" id="sub-again"></span></button>
+      <button class="rate-btn rate-hard" data-q="1"><span class="rate-label">Hard</span><span class="rate-sub" id="sub-hard"></span></button>
+      <button class="rate-btn rate-good" data-q="2"><span class="rate-label">Good</span><span class="rate-sub" id="sub-good"></span></button>
+      <button class="rate-btn rate-easy" data-q="3"><span class="rate-label">Easy</span><span class="rate-sub" id="sub-easy"></span></button>
+    </div>
+  </section>
+
+  <!-- ===== BROWSE VIEW ===== -->
+  <section class="view" id="view-browse" hidden>
+    <header class="topbar topbar-title">
+      <div class="view-title">All words</div>
+    </header>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search German or English…">
+    </div>
+    <div class="word-list" id="word-list"></div>
+  </section>
+
+  <!-- ===== ADD VIEW ===== -->
+  <section class="view" id="view-add" hidden>
+    <header class="topbar topbar-title">
+      <div class="view-title">Add a word</div>
+    </header>
+    <form class="add-form" id="add-form">
+      <div class="field-row" id="article-select">
+        <button type="button" class="article-choice is-selected" data-art="der">der</button>
+        <button type="button" class="article-choice" data-art="die">die</button>
+        <button type="button" class="article-choice" data-art="das">das</button>
+        <button type="button" class="article-choice" data-art="">—</button>
+      </div>
+      <label class="field">
+        <span>German word</span>
+        <input type="text" id="input-word" placeholder="z. B. Fahrrad" required>
+      </label>
+      <label class="field">
+        <span>Plural (optional)</span>
+        <input type="text" id="input-plural" placeholder="z. B. -er">
+      </label>
+      <label class="field">
+        <span>English translation</span>
+        <input type="text" id="input-english" placeholder="e.g. bicycle" required>
+      </label>
+      <label class="field">
+        <span>Example sentence (optional)</span>
+        <input type="text" id="input-example" placeholder="Ich fahre gern Fahrrad.">
+      </label>
+      <label class="field">
+        <span>Example translation (optional)</span>
+        <input type="text" id="input-example-en" placeholder="I like riding my bike.">
+      </label>
+      <label class="field">
+        <span>Added by (optional)</span>
+        <input type="text" id="input-addedby" placeholder="your name">
+      </label>
+      <button type="submit" class="btn-primary btn-full">Add to deck</button>
+      <p class="form-note" id="form-note"></p>
+    </form>
+  </section>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bottom-nav">
+    <button class="nav-btn is-active" data-view="study">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M4 4h16v12H6l-2 2V4z"/></svg>
+      <span>Study</span>
+    </button>
+    <button class="nav-btn" data-view="browse">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M4 3h11a3 3 0 013 3v15l-7-3-7 3V6a3 3 0 013-3z"/></svg>
+      <span>Browse</span>
+    </button>
+    <button class="nav-btn" data-view="add">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7V4z"/></svg>
+      <span>Add</span>
+    </button>
+  </nav>
+
+</div>
+
+<script src="words.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
